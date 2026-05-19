@@ -27,7 +27,11 @@ const SignUpComponent = () => {
   const [emailVerify] = useEmailVerifyMutation();
   const [verifyOtp] = useVerifyOtpMutation();
   const [registerUser] = useRegisterUserMutation();
-  const { register, handleSubmit, watch } = useForm<Inputs>();
+  const { register,
+          handleSubmit,
+          watch,
+          formState: { errors },
+        } = useForm<Inputs>();
   const [isBusy, setIsBusy] = useState<boolean>(false);
   const [showOtpField, setShowOtpField] = useState<boolean>(false);
   const [registerInfo, setRegisterInfo] = useState<IRegisterInfo>();
@@ -139,41 +143,89 @@ const SignUpComponent = () => {
         <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-sm">
           {!showOtpField ? (
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-              <SSInput
-                label="Name"
+             <SSInput
+               label="Name"
                 name="name"
                 placeholder="Enter your name"
                 required={true}
                 icon="fas fa-user"
                 register={register}
-              />
-              <SSInput
-                label="Email address"
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                required={true}
-                icon="fas fa-envelope"
-                register={register}
-              />
-              <SSInput
-                label="Password"
-                name="password"
-                type="password"
-                placeholder="Enter your password"
-                required={true}
-                icon="fas fa-lock"
-                register={register}
-              />
-              <SSInput
-                label="Confirm Password"
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirm your password"
-                required={true}
-                icon="fas fa-eye"
-                register={register}
-              />
+                validation={{
+                  minLength: {
+                    value: 2,
+                    message: "Name must be at least 2 characters",
+                  },
+                  maxLength: {
+                    value: 50,
+                    message: "Name must be less than 50 characters",
+                  },
+                  pattern: {
+                    value: /^[a-zA-Z\s]+$/,
+                    message: "Name can only contain letters and spaces",
+                  },
+                }}
+/>
+
+            {errors.name && (
+            <p className="text-red-400 text-sm">
+             {errors.name.message}
+            </p>
+            )}
+      <SSInput
+          label="Email address"
+          name="email"
+          type="email"
+          placeholder="Enter your email"
+          required={true}
+          icon="fas fa-envelope"
+          register={register}
+          validation={{
+          required: "Email is required",
+          pattern: {
+          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, 
+           message: "Invalid email address",
+          },
+          }}
+          error={errors.email}
+        />
+      <SSInput
+         label="Password"
+         name="password"
+         type="password"
+         placeholder="Enter your password"
+         required={true}
+         icon="fas fa-lock"
+         register={register}
+          validation={{
+             required: "Password is required",
+             minLength: {
+             value: 6,
+             message: "Password must be at least 6 characters",
+            },
+            }}
+           error={errors.password}
+       />
+
+      <SSInput
+  label="Confirm Password"
+  name="confirmPassword"
+  type="password"
+  placeholder="Confirm your password"
+  required={true}
+  icon="fas fa-lock"
+  register={register}
+  validation={{
+    required: "Confirm Password is required",
+  }}
+  error={errors.confirmPassword}
+/>
+
+
+
+
+
+
+
               <SSButton text="Sign Up" type="submit" isLoading={isBusy} />
             </form>
           ) : (
