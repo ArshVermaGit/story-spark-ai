@@ -18,8 +18,8 @@ router.post("/google-login", AuthController.googleLogin);
 // Register API route
 router.post(
   "/register",
-  ipRateLimiter,
   validateRequest(UserValidator.register),
+  ipRateLimiter,
   AuthController.register
 );
 

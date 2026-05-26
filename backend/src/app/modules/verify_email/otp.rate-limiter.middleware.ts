@@ -16,6 +16,21 @@ const COOLDOWN_TIME = 5 * 60 * 1000; // 5 minutes
 const PHASE_2_MAX_ATTEMPTS = 8; // 5 + 3 final chances
 const PERMANENT_BLOCK_TIME = 24 * 60 * 60 * 1000; // 24 hours block
 
+// Cleanup old keys periodically to prevent memory leaks
+const cleanupInterval = setInterval(() => {
+  const now = Date.now();
+  for (const key of Object.keys(rateLimitStore)) {
+    const record = rateLimitStore[key];
+    if (
+      (now > record.blockUntil && record.attempts >= PHASE_2_MAX_ATTEMPTS) ||
+      (now > record.blockUntil + COOLDOWN_TIME && record.attempts < PHASE_2_MAX_ATTEMPTS)
+    ) {
+      delete rateLimitStore[key];
+    }
+  }
+}, 60 * 60 * 1000); // every hour
+cleanupInterval.unref();
+
 /**
  * Tiered Rate limiting middleware for OTP verification
  * - 5 free attempts
@@ -49,7 +64,7 @@ export const otpRateLimiter = (
     if (record.attempts >= PHASE_2_MAX_ATTEMPTS) {
       throw new ApiError(
         httpStatus.TOO_MANY_REQUESTS,
-        `You have been blocked from verifying due to too many failed attempts. Please try again after ${hoursLeft} hours.`
+        `You have been blocked from verifying due to too many attempts. Please try again after ${hoursLeft} hours.`
       );
     } else {
       throw new ApiError(

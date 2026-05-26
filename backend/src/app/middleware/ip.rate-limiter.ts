@@ -16,7 +16,7 @@ const MAX_REQUESTS = 5; // max registrations per WINDOW_MS
 const BLOCK_TIME_MS = 24 * 60 * 60 * 1000; // block 24 hours when exceeded
 
 // Cleanup old keys periodically to prevent memory leak
-setInterval(() => {
+const cleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [key, rec] of store.entries()) {
     const age = now - rec.firstRequestAt;
@@ -25,18 +25,16 @@ setInterval(() => {
     }
   }
 }, 60 * 60 * 1000); // every hour
-
-function getIp(req: Request) {
-  const forwarded = (req.headers["x-forwarded-for"] as string) || "";
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-  return req.ip || req.connection.remoteAddress || "unknown";
-}
+cleanupInterval.unref(); // Allow Node process to exit cleanly
 
 export const ipRateLimiter = (req: Request, res: Response, next: NextFunction) => {
   try {
-    const ip = getIp(req);
+    const ip = req.ip;
+    
+    if (!ip) {
+      throw new ApiError(httpStatus.FORBIDDEN, "Could not determine client IP address.");
+    }
+    
     const now = Date.now();
     const key = `reg_${ip}`;
 
