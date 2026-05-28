@@ -8,7 +8,7 @@ import { Post } from "../post/post.model";
 
 const toggleReaction = async (
   postId: string,
-  type: string = "like",
+  type: any = "like",
   token: ITokenPayload
 ) => {
   const { email } = token;
@@ -21,14 +21,30 @@ const toggleReaction = async (
     throw new ApiError(httpStatus.BAD_REQUEST, "Post not found!");
   }
 
- main
+  const existingReaction = await Reaction.findOne({
+    postId: new Types.ObjectId(postId),
+    userId: user._id,
+  });
+
+  if (existingReaction) {
+    if (existingReaction.type === type) {
+      await Reaction.findByIdAndDelete(existingReaction._id);
+      const likesCount = await Reaction.countDocuments({ postId: new Types.ObjectId(postId), type: "like" });
+      return { message: "Reaction removed", reaction: null, likesCount };
+    } else {
+      existingReaction.type = type;
+      await existingReaction.save();
+      const likesCount = await Reaction.countDocuments({ postId: new Types.ObjectId(postId), type: "like" });
+      return { message: "Reaction updated", reaction: existingReaction, likesCount };
+    }
+  } else {
     const newReaction = await Reaction.create({
       postId: new Types.ObjectId(postId),
       userId: user._id,
       type: type,
     });
- main
-    };
+    const likesCount = await Reaction.countDocuments({ postId: new Types.ObjectId(postId), type: "like" });
+    return { message: "Reaction added", reaction: newReaction, likesCount };
   }
 };
 
