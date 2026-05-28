@@ -34,8 +34,8 @@ const ThemeToggle: React.FC = () => {
   }, [isDark]);
 
   const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const doc = document as ViewTransitionDocument;
 
-    
     // Check if the browser supports View Transitions API and user respects motion
     if (!doc.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       toggleTheme();
